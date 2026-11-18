@@ -1,0 +1,762 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>פתרונות – עבודת בית י'</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f6f8; --card:#fff; --ink:#1d2330; --muted:#5d6577; --line:#e2e5ec;
+  --blue:#2f6fde; --blue-soft:#eaf1fd; --orange:#e8590c; --orange-soft:#fff1e8;
+  --pos:#1f5fd0; --neg:#d32f2f; --zero:#7b3fb8; --ok:#1e8e4e; --ok-soft:#e8f6ee;
+  --hint:#9a6b00; --hint-soft:#fff8dc; --err:#b42318; --err-soft:#fdeceb; --hl:#fff1a8;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14171d; --card:#1d222b; --ink:#e8ebf1; --muted:#a3abbb; --line:#2f3644;
+    --blue:#6f9ef0; --blue-soft:#1f2b40; --orange:#ff8a4c; --orange-soft:#3a271c;
+    --pos:#79a8ff; --neg:#ff7b7b; --zero:#c79bf2; --ok:#5fd08f; --ok-soft:#1b3326;
+    --hint:#f3d36b; --hint-soft:#2f2a16; --err:#ff9a9a; --err-soft:#3b1d1d; --hl:#5a4d12;
+  }
+  :root:not([data-theme="light"]) .qimg, :root:not([data-theme="light"]) .lb img{ filter: invert(.9) hue-rotate(180deg); }
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--bg); color:var(--ink); font-family:'Assistant',system-ui,sans-serif; font-size:17px; line-height:1.6; padding-bottom:84px}
+.wrap{max-width:720px; margin:0 auto; padding:0 16px}
+
+/* ---------- math */
+.m{font-family:'Times New Roman',Times,serif; direction:ltr; unicode-bidi:isolate; font-size:1.12em}
+.or{unicode-bidi:isolate; direction:rtl; font-family:'Assistant',sans-serif; font-size:.85em; margin:0 .45em; color:var(--muted)}
+.fr{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; margin:0 .12em; line-height:1.15}
+.fr>span:first-child{border-bottom:1.3px solid currentColor; padding:0 .2em .05em}
+.fr>span:last-child{padding:.05em .2em 0}
+.hl{background:var(--hl); border-radius:4px; padding:0 .15em}
+.eq{direction:ltr; text-align:center; font-family:'Times New Roman',Times,serif; font-size:1.18em; margin:6px 0; line-height:1.9; white-space:nowrap; overflow-x:auto; scrollbar-width:none}
+.eq .m{white-space:nowrap}
+.eq.lab{display:flex; justify-content:center; align-items:center; gap:10px; direction:rtl; flex-wrap:wrap}
+.eq.lab b{font-family:'Assistant',sans-serif; font-size:.82em}
+.eq.heb{direction:rtl; font-family:'Assistant',sans-serif; font-weight:800; font-size:1em}
+.eq .ok{color:var(--ok); font-family:'Assistant',sans-serif; font-weight:800; margin-inline-start:.4em}
+
+/* ---------- top */
+header.top{background:var(--blue); color:#fff; padding:16px 16px 14px}
+header.top h1{margin:0; font-size:1.35rem; font-weight:800; line-height:1.25}
+header.top p{margin:4px 0 0; opacity:.92; font-size:.95rem}
+nav.jump{position:sticky; top:0; z-index:5; background:var(--card); border-bottom:1px solid var(--line); box-shadow:0 2px 6px rgba(0,0,0,.05)}
+nav.jump .wrap{display:flex; gap:6px; overflow-x:auto; padding:8px 16px; scrollbar-width:none}
+nav.jump .wrap::-webkit-scrollbar{display:none}
+nav.jump button{flex:none; min-width:38px; min-height:38px; padding:0; border-radius:10px; background:var(--blue-soft); color:var(--blue); font-weight:800; border:2px solid transparent}
+nav.jump button.cur{background:var(--blue); color:#fff}
+nav.jump .sep{flex:none; width:1px; background:var(--line); margin:4px 2px}
+details.intro{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:10px 14px; margin:14px 0 0}
+details.intro summary{font-weight:800; cursor:pointer}
+details.intro ol{margin:6px 0 0; padding-inline-start:22px}
+details.intro.ai{border-color:var(--orange); background:var(--orange-soft)}
+.small-note{color:var(--muted); font-size:.9rem}
+
+/* ---------- carousel */
+.where{display:flex; justify-content:space-between; align-items:baseline; margin:16px 2px 6px; color:var(--muted); font-weight:700; font-size:.95rem}
+.stage{position:relative; overflow:hidden; touch-action:pan-y pinch-zoom}
+.card{display:none; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px; box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card.on{display:block}
+.card.in-next{animation:inNext .25s ease}
+.card.in-prev{animation:inPrev .25s ease}
+@keyframes inNext{from{opacity:0; transform:translateX(-40px)} to{opacity:1; transform:none}}
+@keyframes inPrev{from{opacity:0; transform:translateX(40px)} to{opacity:1; transform:none}}
+.card .head{display:flex; align-items:center; gap:10px; margin-bottom:10px}
+.card .num{background:var(--blue); color:#fff; font-weight:800; border-radius:10px; min-width:38px; height:38px; display:grid; place-items:center; font-size:1.1rem}
+.card .ttl{font-weight:800}
+.imgbox{position:relative; cursor:zoom-in; border-radius:8px; overflow:hidden; background:#fff; border:1px solid var(--line)}
+.qimg{display:block; width:100%; height:auto}
+.imgbox.small .qimg{max-width:380px; margin-inline-start:auto}
+.zoom-ic{position:absolute; bottom:6px; left:6px; width:34px; height:34px; border-radius:50%; background:rgba(29,35,48,.75); display:grid; place-items:center}
+.instr{margin-top:6px; color:var(--muted)}
+
+/* ---------- toggle buttons */
+.btns{display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:10px}
+.tg{font:inherit; font-weight:800; border-radius:12px; padding:8px 10px; cursor:pointer; min-height:40px; font-size:.88rem; line-height:1.2; padding:6px 4px; background:var(--card); border:2px solid currentColor; display:flex; align-items:center; justify-content:center; gap:8px; transition:background .15s, color .15s, box-shadow .15s}
+.tg .st{font-size:.75rem; font-weight:700; opacity:.75}
+.tg[aria-pressed="true"]{color:#fff !important; box-shadow:inset 0 3px 6px rgba(0,0,0,.25)}
+.t-hint{color:var(--hint)} .t-hint[aria-pressed="true"]{background:#b58300}
+.t-steps{color:var(--blue)} .t-steps[aria-pressed="true"]{background:var(--blue)}
+.t-final{color:var(--ok)} .t-final[aria-pressed="true"]{background:var(--ok)}
+.t-err{color:var(--err)} .t-err[aria-pressed="true"]{background:var(--err)}
+.t-ai{color:var(--orange)} .t-ai[aria-pressed="true"]{background:var(--orange)}
+
+/* ---------- panels */
+.panel{display:none; margin-top:12px; border-radius:12px; padding:12px 14px}
+.panel.open{display:block; animation:fade .2s ease}
+.panel h4{margin:0 0 6px; font-size:1rem}
+.p-hint{background:var(--hint-soft); border:2px solid #e6c65c}
+.p-steps{background:var(--blue-soft); border:2px solid var(--blue)}
+.p-final{background:var(--ok-soft); border:2px solid var(--ok)}
+.p-err{background:var(--err-soft); border:2px solid var(--err)}
+.p-ai{background:var(--orange-soft); border:2px solid var(--orange)}
+.step{display:none; background:var(--card); border-radius:10px; padding:10px 12px; margin:8px 0; border-inline-start:4px solid var(--blue)}
+.step.show{display:block; animation:fade .25s ease}
+.step .say{font-weight:600}
+.step.hint-step{border-inline-start-color:#c99a00; background:var(--hint-soft)}
+.step.hint-step .sn{color:var(--hint)}
+.final-box{margin-top:6px; color:var(--ok); font-size:.88rem; line-height:1.4}
+.final-box h4{margin:0; font-size:.85rem; font-weight:800}
+.final-box .fin{gap:0 8px}
+.final-box .eq{font-size:1.05em; margin:0; line-height:1.5}
+.final-box .fl{font-weight:700}
+.final-box .eq.heb{font-size:.95em; font-weight:700}
+.ai-note{margin:0 0 4px}
+.step .sn{font-weight:800; color:var(--blue); margin-inline-end:6px}
+.part{display:none; font-weight:800; margin:14px 0 2px; color:var(--orange)}
+.part.show{display:block}
+.step-ctl{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
+.b-next,.b-all{font:inherit; font-weight:800; border-radius:12px; padding:8px 14px; min-height:44px; cursor:pointer}
+.b-next{background:var(--blue); color:#fff; border:0; flex:1}
+.b-all{background:transparent; color:var(--blue); border:2px solid var(--blue)}
+.done-msg{display:none; font-weight:800; color:var(--ok); margin-top:6px}
+.fin{display:grid; grid-template-columns:auto 1fr; gap:4px 12px; align-items:center}
+.fin .fl{font-weight:800}
+.fin .eq{text-align:left; margin:2px 0}
+.err-item{background:var(--card); border-radius:10px; padding:8px 12px; margin:8px 0}
+.err-item .eq{text-align:right; direction:rtl; display:flex; gap:8px; align-items:center; justify-content:flex-start; flex-wrap:wrap; margin:2px 0}
+.err-item .mk{font-family:'Assistant',sans-serif; font-weight:800; font-size:.8em; min-width:3.6em}
+.err-item .w .mk{color:var(--err)} .err-item .w .m{text-decoration:line-through; text-decoration-color:var(--err); text-decoration-thickness:2px}
+.err-item .r .mk{color:var(--ok)}
+@keyframes fade{from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:none}}
+
+/* ---------- tables, sketch */
+.tbl-wrap{overflow-x:auto; margin:6px 0}
+table.s{direction:ltr; border-collapse:collapse; margin:0 auto; font-size:.86rem; font-family:'Times New Roman',serif}
+table.s th, table.s td{border:1px solid var(--line); padding:4px 4px; text-align:center; background:var(--card); line-height:1.3}
+table.s th{background:var(--bg); white-space:nowrap}
+table.s td.h{font-weight:700; background:var(--bg); font-family:'Assistant',sans-serif; direction:rtl; font-size:.95em}
+table.s .tv{color:var(--muted); font-size:.85em}
+.pos{color:var(--pos); font-weight:800} .neg{color:var(--neg); font-weight:800} .zr{color:var(--zero); font-weight:800}
+.sketch{display:block; margin:6px auto; max-width:260px; width:100%; direction:ltr}
+
+/* ---------- AI */
+.prompt{white-space:pre-wrap; background:var(--card); border:1px dashed var(--orange); border-radius:10px; padding:10px 12px; font-size:.9rem; max-height:200px; overflow:auto}
+.ai-btns{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px}
+.ai-btns a, .ai-btns button{font:inherit; font-weight:800; text-decoration:none; border-radius:12px; padding:6px 8px; min-height:40px; font-size:.9rem; display:flex; align-items:center; justify-content:center; background:var(--card); color:var(--orange); border:2px solid var(--orange); cursor:pointer}
+
+/* ---------- bottom bar */
+.bar{position:fixed; bottom:0; left:0; right:0; background:var(--card); border-top:1px solid var(--line); box-shadow:0 -2px 8px rgba(0,0,0,.06); z-index:6}
+.bar .wrap{display:flex; align-items:center; gap:10px; padding:10px 16px}
+.bar button{font:inherit; font-weight:800; flex:1; min-height:48px; border-radius:12px; border:2px solid var(--blue); background:var(--card); color:var(--blue); cursor:pointer}
+.bar button.nx{background:var(--blue); color:#fff}
+.bar button:disabled{opacity:.35; cursor:default}
+.bar .cnt{flex:none; font-weight:800; color:var(--muted); min-width:56px; text-align:center}
+
+/* ---------- lightbox */
+.lb{position:fixed; inset:0; z-index:30; background:rgba(10,12,16,.92); display:none; overflow:auto; touch-action:pan-x pan-y pinch-zoom}
+.lb.on{display:block}
+.lb .inner{min-height:100%; display:flex; align-items:center; justify-content:center; padding:56px 8px 24px}
+.lb img{display:block; width:100%; max-width:1300px; height:auto; background:#fff; border-radius:6px; cursor:zoom-in}
+.lb.big img{width:200%; max-width:none; cursor:zoom-out}
+.lb.big .inner{justify-content:flex-start}
+.lb .x{position:fixed; top:10px; left:10px; width:44px; height:44px; border-radius:50%; border:0; background:#fff; color:#111; font-size:1.4rem; font-weight:800; cursor:pointer}
+.lb .tip{position:fixed; top:16px; right:14px; color:#fff; font-weight:700; font-size:.9rem}
+
+.toast{position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:#1d2330; color:#fff; padding:10px 18px; border-radius:12px; font-weight:700; opacity:0; transition:opacity .2s; pointer-events:none; z-index:40}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <h1>פתרונות לעבודת הבית – כיתה י'</h1>
+  <p>שלב אחרי שלב, עם הסברים וטעויות נפוצות</p>
+</div></header>
+<nav class="jump"><div class="wrap" id="jump"></div></nav>
+
+<main class="wrap">
+  <details class="intro">
+    <summary>איך משתמשים בדף הזה</summary>
+    <ol>
+      <li>קודם פותרים לבד במחברת, ובודקים מול ה<b>תשובה הסופית</b> שמתחת לשאלה.</li>
+      <li>נתקעתם או יצא לא נכון? <b>פתרון מפורט</b>: קודם רמז, ואחר כך שלב אחד בכל פעם. אחרי כל שלב – ממשיכים לבד.</li>
+      <li>כדאי לקרוא גם את <b>טעויות נפוצות</b> – אולי אחת מהן אצלכם.</li>
+      <li>מעבר בין שאלות: החצים למטה, המספרים למעלה, או החלקה הצידה.</li>
+    </ol>
+  </details>
+  <details class="intro ai">
+    <summary>רוצים עזרה מ-AI? שיעזור, לא יפתור במקומכם</summary>
+    <p style="margin:6px 0">אם תכתבו לצ'אט "תפתור לי", תקבלו פתרון – ולא תלמדו כלום. במבחן לא יהיה AI.<br>
+    בכל שאלה יש כפתור <b>עזרה מ-AI</b> עם הוראה מוכנה. מעתיקים לצ'אט, והוא ישאל אתכם שאלות מנחות, צעד אחד בכל פעם.</p>
+    <p class="small-note" style="margin:0">גם AI טועה לפעמים. אם יצא לכם משהו שונה מה"תשובה הסופית" כאן – תאמינו לתשובה הסופית ושאלו את המורה.</p>
+  </details>
+
+  <div class="where"><span id="secName"></span><span id="secCount"></span></div>
+  <div class="stage" id="stage"></div>
+</main>
+
+<div class="bar"><div class="wrap">
+  <button id="prev" aria-label="השאלה הקודמת">→ הקודמת</button>
+  <span class="cnt" id="cnt"></span>
+  <button id="next" class="nx" aria-label="השאלה הבאה">הבאה ←</button>
+</div></div>
+
+<div class="lb" id="lb" role="dialog" aria-label="השאלה בהגדלה">
+  <button class="x" id="lbx" aria-label="סגירה">✕</button>
+  <span class="tip">לחיצה על התמונה – הגדלה נוספת</span>
+  <div class="inner"><img id="lbimg" alt=""></div>
+</div>
+<div class="toast" id="toast">הועתק! עכשיו מדביקים בצ'אט</div>
+
+<script>
+/* ===== notation in math strings =====
+   [a/b]  fraction with horizontal bar      {..}  highlight
+   _AB    subscript (1-2 capitals)          ' או '  Hebrew "or"
+   step equation lines:  'math'  |  'label|math'  |  '!Hebrew line'  |  {html:'...'}          */
+const SECTIONS = [
+  {name:'טכניקה אלגברית', from:1, to:5},
+  {name:'הנדסה אנליטית', from:6, to:11},
+  {name:'פונקציה ריבועית – פרבולה', from:12, to:14},
+  {name:'פונקציות – קריאה מגרף', from:15, to:16},
+  {name:'משוואות ממעלה שלישית ומעלה', from:17, to:18},
+];
+
+function signTable(zeros, tests, vals){
+  let head='<tr><th>x</th>', sub='<tr><td class="h">מציבים<br><span class="tv">יוצא</span></td>', sg='<tr><td class="h">סימן</td>';
+  tests.forEach((t,i)=>{
+    head += `<th>${i===0?'x &lt;':(i===tests.length-1?'&lt; x':'&lt; x &lt;')}</th>`;
+    const [tx,tv]=t.split(':');
+    sub += `<td>${tx}<br><span class="tv">${tv}</span></td>`;
+    sg  += `<td>${vals[i]==='+'?'<span class="pos">+</span>':'<span class="neg">−</span>'}</td>`;
+    if(i<zeros.length){ head+=`<th class="zr">${zeros[i]}</th>`; sub+='<td></td>'; sg+='<td class="zr">0</td>'; }
+  });
+  return {html:`<div class="tbl-wrap"><table class="s">${head}</tr>${sub}</tr>${sg}</tr></table></div>`};
+}
+function arrowTable(v,left,right){
+  return {html:`<div class="tbl-wrap"><table class="s"><tr><th>x</th><th>x &lt;</th><th style="color:#8a4b2a">${v}</th><th>&lt; x</th></tr>`+
+   `<tr><td class="h">הגרף</td><td style="font-size:1.4em">${left}</td><td class="h" style="color:#8a4b2a">קודקוד</td><td style="font-size:1.4em">${right}</td></tr></table></div>`};
+}
+function sketch(f, x0, x1, y0, y1, pts){
+  const W=240, H=200, sx=x=>(x-x0)/(x1-x0)*W, sy=y=>H-(y-y0)/(y1-y0)*H;
+  let d=''; for(let i=0;i<=120;i++){const x=x0+(x1-x0)*i/120, y=f(x); d+=(i?'L':'M')+sx(x).toFixed(1)+' '+sy(y).toFixed(1);}
+  let s=`<svg class="sketch" viewBox="-10 -10 ${W+20} ${H+20}"><line x1="0" y1="${sy(0)}" x2="${W}" y2="${sy(0)}" stroke="currentColor" stroke-width="1.2"/><line x1="${sx(0)}" y1="0" x2="${sx(0)}" y2="${H}" stroke="currentColor" stroke-width="1.2"/>`+
+    `<text x="${W+2}" y="${sy(0)-4}" font-size="13" fill="currentColor" text-anchor="end">x</text><text x="${sx(0)+5}" y="10" font-size="13" fill="currentColor">y</text>`+
+    `<clipPath id="cp"><rect x="0" y="0" width="${W}" height="${H}"/></clipPath><path d="${d}" fill="none" stroke="#2f6fde" stroke-width="2.5" clip-path="url(#cp)"/>`;
+  pts.forEach(([x,y,lab,dx,dy])=>{ s+=`<circle cx="${sx(x)}" cy="${sy(y)}" r="4" fill="${y===0?'#7b3fb8':'#8a4b2a'}"/><text x="${sx(x)+(dx||0)}" y="${sy(y)+(dy||0)}" font-size="12.5" fill="currentColor" font-family="Times New Roman">${lab}</text>`; });
+  return {html:s+'</svg>'};
+}
+const S=(p,say,...eq)=>({p,say,eq});
+const E=(t,w,r)=>({t,w,r});
+
+const Q = [
+// ================================================== algebra
+{n:1, img:'q1', small:true, title:'משוואה עם סוגריים', instr:'פתרו את המשוואה.',
+ text:'פתרו את המשוואה: 9(2x − 7) = 17 − 4(x − 2)',
+ hint:['קודם פותחים את הסוגריים בשני האגפים. שימו לב למינוס שלפני ה-4: גם הוא נכנס לסוגריים.'],
+ steps:[
+  S('','פותחים סוגריים באגף שמאל: ה-9 נכפל בכל איבר בסוגריים.','{18x − 63} = 17 − 4(x − 2)'),
+  S('','פותחים סוגריים באגף ימין: כופלים את "מינוס 4" בכל איבר. מינוס כפול מינוס זה פלוס.','18x − 63 = 17 {− 4x + 8}'),
+  S('','מכנסים באגף ימין: 17 ועוד 8 זה 25.','18x − 63 = {25} − 4x'),
+  S('','מעבירים אגפים: האיברים עם x לשמאל, המספרים לימין. כל איבר שעובר אגף – מחליף סימן.','18x {+ 4x} = 25 {+ 63}'),
+  S('','מכנסים.','22x = 88'),
+  S('','מחלקים את שני האגפים ב-22.','x = [88/22] = 4'),
+  S('','בדיקה: מציבים 4 במקום x, בכל אגף לחוד.','9(2·4 − 7) = 9·1 = 9','17 − 4(4 − 2) = 17 − 8 = 9','!יצא שווה – הפתרון נכון ✓'),
+ ],
+ final:[['','x = 4']],
+ errs:[E('מינוס כפול מינוס זה פלוס, לא מינוס.','−4·(−2) = −8','−4·(−2) = +8'),
+       E('ה-9 נכפל בכל האיברים שבסוגריים, לא רק בראשון.','9(2x − 7) = 18x − 7','9(2x − 7) = 18x − 63'),
+       E('מעבירים אגף – מחליפים סימן.','18x − 4x = 25 + 63','18x + 4x = 25 + 63'),
+       E('אסור לחסר לפני שפותחים סוגריים: קודם כפל, אחר כך חיסור.','17 − 4(x − 2) = 13(x − 2)','17 − 4(x − 2) = 17 − 4x + 8')]},
+
+{n:2, img:'q2', small:true, title:'משוואה עם ריבוע', instr:'פתרו את המשוואה.',
+ text:'פתרו את המשוואה: (3x + 5)² = 9(x + 2)(x − 2)',
+ hint:['כתבו את הריבוע ככפל, ופתחו "כל אחד עם כל אחד":','(3x + 5)² = (3x + 5)(3x + 5)'],
+ steps:[
+  S('','ריבוע זה כפל של הסוגריים בעצמם.','{(3x + 5)(3x + 5)} = 9(x + 2)(x − 2)'),
+  S('','כופלים כל איבר בכל איבר – ארבעה כפלים.','3x·3x + 3x·5 + 5·3x + 5·5 = 9(x + 2)(x − 2)'),
+  S('','מחשבים כל כפל, ומכנסים את שני האיברים האמצעיים.','{9x² + 30x + 25} = 9(x + 2)(x − 2)'),
+  S('','באגף ימין: קודם כופלים את שני הסוגריים.','9x² + 30x + 25 = 9{(x² − 2x + 2x − 4)}','9x² + 30x + 25 = 9{(x² − 4)}'),
+  S('','עכשיו כופלים ב-9.','9x² + 30x + 25 = {9x² − 36}'),
+  S('','בשני האגפים יש אותו איבר עם x בריבוע. מחסרים אותו משני האגפים – והוא נעלם.','30x + 25 = −36'),
+  S('','מעבירים את 25 אגף (מחליף סימן).','30x = −36 {− 25}','30x = −61'),
+  S('','מחלקים ב-30.','x = [−61/30] = −2[1/30] ≈ −2.03'),
+ ],
+ final:[['','x = [−61/30] = −2[1/30]'],['בעשרוני:','x ≈ −2.03']],
+ errs:[E('הטעות הכי נפוצה: שכחתם את האיבר האמצעי. פתחו לאט: (3x + 5)(3x + 5).','(3x + 5)² = 9x² + 25','(3x + 5)² = 9x² + 30x + 25'),
+       E('גם ה-3 עולה בריבוע.','(3x)² = 3x²','(3x)² = 9x²'),
+       E('ה-9 נכפל פעם אחת בלבד – לא בכל אחד מהסוגריים.','9(x + 2)(x − 2) = (9x + 18)(9x − 18)','9(x + 2)(x − 2) = 9(x² − 4)'),
+       E('רואים x בריבוע ורצים לנוסחת השורשים. כאן הוא מתבטל, ונשארת משוואה פשוטה.'),
+       E('שני מספרים שליליים – התוצאה שלילית וגדולה יותר.','−36 − 25 = −11','−36 − 25 = −61')]},
+
+{n:3, img:'q3', small:true, title:'משוואה ריבועית', instr:'פתרו את המשוואה.',
+ text:'פתרו את המשוואה: x² + 8x + 12 = 0',
+ hint:['זו משוואה ריבועית שכבר שווה ל-0. רשמו את המקדמים והציבו בנוסחת השורשים:','x = [−b ± √(b² − 4ac)/2a]'],
+ steps:[
+  S('','המשוואה כבר שווה ל-0. רושמים את המקדמים:','x² + 8x + 12 = 0','a = 1 ,  b = 8 ,  c = 12'),
+  S('','מחשבים את מה שבתוך השורש:','b² − 4ac = 8² − 4·1·12 = 64 − 48 = 16','√16 = 4'),
+  S('','מציבים בנוסחת השורשים:','x = [−8 ± 4/2]'),
+  S('','מחשבים פעם עם פלוס ופעם עם מינוס:','x₁ = [−8 + 4/2] = [−4/2] = −2','x₂ = [−8 − 4/2] = [−12/2] = −6'),
+  S('','בדיקה: מציבים מינוס 2.','(−2)² + 8·(−2) + 12 = 4 − 16 + 12 = 0','!יצא 0 – נכון ✓'),
+  S('','דרך נוספת – פירוק: שני מספרים שהמכפלה שלהם 12 והסכום שלהם 8 הם 2 ו-6.','(x + 2)(x + 6) = 0','x = −2 או x = −6'),
+ ],
+ final:[['','x = −2 ,  x = −6']],
+ errs:[E('בנוסחה מתחילים ב"מינוס b". אם b = 8, מתחילים במינוס 8.','x = [8 ± 4/2]','x = [−8 ± 4/2]'),
+       E('מחלקים ב-2 את כל המונה, לא רק את השורש.','x = −8 ± [4/2]','x = [−8 ± 4/2]'),
+       E('8 בריבוע זה 8 כפול 8.','8² = 16','8² = 64')]},
+
+{n:4, img:'q4', small:true, title:'משוואה ריבועית שלא שווה ל-0', instr:'פתרו את המשוואה.',
+ text:'פתרו את המשוואה: x² − 6x = 40',
+ hint:['לפני הנוסחה חייבים שאגף אחד יהיה 0. העבירו את 40 אגף:','x² − 6x − 40 = 0'],
+ steps:[
+  S('','מעבירים את 40 לצד שמאל (מחליף סימן), כדי שבצד ימין יהיה 0.','x² − 6x {− 40} = 0'),
+  S('','רושמים את המקדמים. שימו לב: b ו-c שליליים.','a = 1 ,  b = −6 ,  c = −40'),
+  S('','מה שבתוך השורש. מינוס 6 בריבוע זה פלוס 36, ומינוס כפול מינוס זה פלוס.','b² − 4ac = (−6)² − 4·1·(−40)','= 36 + 160 = 196','√196 = 14'),
+  S('','"מינוס b": המינוס של מינוס 6 הוא 6.','x = [6 ± 14/2]'),
+  S('','פעם פלוס ופעם מינוס:','x₁ = [6 + 14/2] = [20/2] = 10','x₂ = [6 − 14/2] = [−8/2] = −4'),
+  S('','בדיקה בשתי התשובות:','10² − 6·10 = 100 − 60 = 40 ✓','(−4)² − 6·(−4) = 16 + 24 = 40 ✓'),
+ ],
+ final:[['','x = 10 ,  x = −4']],
+ errs:[E('מציבים בנוסחה בלי להעביר אגף. קודם צריך שאגף אחד יהיה 0.','c = 40','c = −40'),
+       E('מספר שלילי בריבוע יוצא חיובי.','(−6)² = −36','(−6)² = 36'),
+       E('מינוס כפול מינוס זה פלוס.','−4·1·(−40) = −160','−4·1·(−40) = +160'),
+       E('"מינוס b" כש-b שלילי יוצא חיובי.','−b = −6','−b = −(−6) = 6')]},
+
+{n:5, img:'q5', title:'חיתוך פרבולה וישר',
+ text:'מצאו את נקודות החיתוך של הגרפים y = x² − 8 ו- y = 2x',
+ hint:['בנקודת חיתוך ה-y של שני הגרפים שווה, ולכן משווים. ואל תשכחו למצוא גם את y!','x² − 8 = 2x'],
+ steps:[
+  S('','בנקודת חיתוך יש לשני הגרפים אותו x ואותו y. לכן משווים בין שני הביטויים:','x² − 8 = 2x'),
+  S('','מעבירים הכול לצד אחד:','x² − 2x − 8 = 0'),
+  S('','נוסחת השורשים:','b² − 4ac = (−2)² − 4·1·(−8) = 4 + 32 = 36','x = [2 ± 6/2]','x₁ = 4 ,  x₂ = −2'),
+  S('','זו עוד לא התשובה! לנקודה צריך גם y. מציבים בישר, כי שם הכי קל:','x = 4   →   y = 2·4 = 8','x = −2   →   y = 2·(−2) = −4'),
+  S('','בדיקה בפרבולה:','4² − 8 = 16 − 8 = 8 ✓','(−2)² − 8 = 4 − 8 = −4 ✓'),
+ ],
+ final:[['','(4;8) ,  (−2;−4)']],
+ errs:[E('עוצרים אחרי שמצאו את x. ביקשו "נקודות" – צריך גם y.','x = 4 ,  x = −2','(4;8) ,  (−2;−4)'),
+       E('מינוס כפול מינוס זה פלוס.','(−2)² = −4','(−2)² = 4'),
+       E('מעבירים אגף ושוכחים להחליף סימן.','x² + 2x − 8 = 0','x² − 2x − 8 = 0')]},
+
+// ================================================== analytic
+{n:6, img:'q6', title:'ישרים, נקודות חיתוך ושטח',
+ text:'הישרים AD ו-BC הם הגרפים של הפונקציות y = −2x + 22 ו- y = x + 4 בהתאמה. A ו-B על ציר y, C ו-D על ציר x, P נקודת החיתוך של הישרים. א. מצאו את שיעורי הנקודות A, B, C, D, P. ב. חשבו את שטח המשולש PCD.',
+ hint:['על ציר y – מציבים 0 במקום x. על ציר x – מציבים 0 במקום y. את P מוצאים כשמשווים בין שני הישרים.'],
+ steps:[
+  S('א','A על הישר AD ועל ציר y. על ציר y, ה-x שווה 0:','y = −2·0 + 22 = 22','A(0;22)'),
+  S('א','B על הישר BC ועל ציר y:','y = 0 + 4 = 4','B(0;4)'),
+  S('א','C על הישר BC ועל ציר x. על ציר x, ה-y שווה 0:','0 = x + 4','x = −4','C(−4;0)'),
+  S('א','D על הישר AD ועל ציר x:','0 = −2x + 22','2x = 22','x = 11','D(11;0)'),
+  S('א','P על שני הישרים, לכן משווים ביניהם:','x + 4 = −2x + 22','3x = 18','x = 6','y = 6 + 4 = 10','P(6;10)'),
+  S('ב','הבסיס CD שוכב על ציר x, ממינוס 4 עד 11:','CD = 11 − (−4) = 15'),
+  S('ב','הגובה לבסיס הוא המרחק של P מציר x, כלומר ה-y של P:','h = 10'),
+  S('ב','שטח משולש = בסיס כפול גובה, חלקי 2:','S = [15 · 10/2] = 75'),
+ ],
+ final:[['א.','A(0;22) ,  B(0;4)'],['','C(−4;0) ,  D(11;0)'],['','P(6;10)'],['ב.','75']],
+ errs:[E('מבלבלים בין הישרים. A היא הנקודה הגבוהה על ציר y – על הישר התלול.'),
+       E('C נמצאת במינוס 4, ולכן מחסרים מינוס 4.','CD = 11 − 4 = 7','CD = 11 − (−4) = 15'),
+       E('הגובה לבסיס שעל ציר x הוא ה-y של P, לא ה-x שלו.','h = 6','h = 10'),
+       E('שוכחים לחלק ב-2.','S = 150','S = 75')]},
+
+{n:7, img:'q7', title:'משוואת צלע במשולש',
+ text:'קודקודי משולש ABC הם A(−1;4), B(2;1), C(−3;−2). א. מצאו את משוואת הצלע AB. ב. מצאו את משוואת הצלע AC.',
+ hint:['שני שלבים: קודם שיפוע לפי שתי נקודות, ואחר כך משוואת ישר לפי נקודה ושיפוע.','m = [y₂ − y₁/x₂ − x₁]','y − y₁ = m(x − x₁)'],
+ steps:[
+  S('א','שיפוע לפי שתי הנקודות A ו-B:','m_AB = [1 − 4/2 − (−1)] = [−3/3] = −1'),
+  S('א','משוואה לפי הנקודה A והשיפוע:','y − 4 = −1·(x − (−1))','y − 4 = −(x + 1)'),
+  S('א','פותחים סוגריים ומבודדים את y:','y − 4 = −x − 1','y = −x + 3'),
+  S('א','בדיקה: מציבים את B.','−2 + 3 = 1 ✓'),
+  S('ב','שיפוע AC:','m_AC = [−2 − 4/−3 − (−1)] = [−6/−2] = 3'),
+  S('ב','משוואה לפי A:','y − 4 = 3(x + 1)','y − 4 = 3x + 3','y = 3x + 7'),
+  S('ב','בדיקה: מציבים את C.','3·(−3) + 7 = −9 + 7 = −2 ✓'),
+ ],
+ final:[['א.','y = −x + 3'],['ב.','y = 3x + 7']],
+ errs:[E('מינוס מינוס זה פלוס.','2 − (−1) = 1','2 − (−1) = 3'),
+       E('במונה ובמכנה – אותו סדר של הנקודות.','[1 − 4/−1 − 2]','[1 − 4/2 − (−1)]'),
+       E('שיפוע = הפרש ה-y חלקי הפרש ה-x, לא הפוך.','[2 − (−1)/1 − 4]','[1 − 4/2 − (−1)]'),
+       E('x פחות מינוס 1 זה x ועוד 1.','x − (−1) = x − 1','x − (−1) = x + 1'),
+       E('שלילי חלקי שלילי יוצא חיובי.','[−6/−2] = −3','[−6/−2] = 3')]},
+
+{n:8, img:'q8', title:'ישר מקביל',
+ text:'נתון הישר I שמשוואתו y = 2x − 3. הישר II מקביל לישר I ועובר דרך הנקודה A(5;2). מצאו את משוואתו של הישר II.',
+ hint:['לישרים מקבילים יש אותו שיפוע.'],
+ steps:[
+  S('','ישרים מקבילים – אותו שיפוע. השיפוע של ישר I הוא 2:','m = 2'),
+  S('','משוואה לפי הנקודה A והשיפוע:','y − 2 = 2(x − 5)'),
+  S('','פותחים סוגריים ומבודדים את y:','y − 2 = 2x − 10','y = 2x − 8'),
+  S('','בדיקה: מציבים את A.','2·5 − 8 = 2 ✓'),
+ ],
+ final:[['','y = 2x − 8']],
+ errs:[E('שיפוע "הפוך ובסימן הפוך" שייך לישר מאונך, לא מקביל.','m = −[1/2]','m = 2'),
+       E('בנקודה (5;2): ה-x הוא 5 וה-y הוא 2. לא להחליף.','5 = 2·2 + b','2 = 2·5 + b'),
+       E('מעתיקים גם את מינוס 3 – אבל זה הישר הראשון עצמו, והוא לא עובר ב-A.','y = 2x − 3','y = 2x − 8')]},
+
+{n:9, img:'q9', title:'נקודה על ציר x במרחק נתון',
+ text:'הנקודה P נמצאת על ציר ה-x, ומרחקה מהנקודה A(3;4) הוא 5. מצאו את שיעורי הנקודה P (יש שתי אפשרויות).',
+ hint:['לנקודה על ציר x יש y = 0. כתבו אותה כך, והציבו בנוסחת המרחק:','P(x;0)'],
+ steps:[
+  S('','כל נקודה על ציר x היא מהצורה:','P(x;0)'),
+  S('','נוסחת המרחק בין P לבין A, ושווה ל-5:','√((x − 3)² + (0 − 4)²) = 5'),
+  S('','מינוס 4 בריבוע זה 16:','√((x − 3)² + {16}) = 5'),
+  S('','מעלים את שני האגפים בריבוע, כדי להיפטר מהשורש:','(x − 3)² + 16 = 25'),
+  S('','מעבירים את 16:','(x − 3)² = 9'),
+  S('','איזה מספר בריבוע נותן 9? גם 3 וגם מינוס 3!','x − 3 = 3   →   x = 6','x − 3 = −3   →   x = 0'),
+  S('','בדיקה:','√((6 − 3)² + 16) = √25 = 5 ✓','√((0 − 3)² + 16) = √25 = 5 ✓'),
+ ],
+ final:[['','P(0;0)'],['או','P(6;0)']],
+ errs:[E('לריבוע יש שני פתרונות.','x − 3 = 3  בלבד','x − 3 = 3 או x − 3 = −3'),
+       E('על ציר x תמיד y = 0 – אין שני נעלמים.','P(x;y)','P(x;0)'),
+       E('ריבוע תמיד חיובי.','(0 − 4)² = −16','(0 − 4)² = 16'),
+       E('אם פותחים את הסוגריים – יש איבר אמצעי. (קל יותר לא לפתוח, ראו שלב 6.)','(x − 3)² = x² + 9','(x − 3)² = x² − 6x + 9')]},
+
+{n:10, img:'q10', title:'מרחק, אמצע קטע, שווה-שוקיים, מאונך',
+ text:'נתונות הנקודות A(1;2), B(7;10), C(12;0). א. חשבו את אורך הקטע AB. ב. מצאו את שיעורי הנקודה M, אמצע הקטע AB. ג. הראו שהמשולש ABC הוא שווה-שוקיים (CA = CB). ד. הראו שהקטע CM מאונך ל-AB (היעזרו בשיפועים).',
+ hint:['א – נוסחת מרחק. ב – ממוצע של ה-x וממוצע של ה-y. ג – מחשבים את שני האורכים. ד – כשישרים מאונכים, מכפלת השיפועים היא מינוס 1.'],
+ steps:[
+  S('א','נוסחת המרחק:','AB = √((7 − 1)² + (10 − 2)²)','= √(6² + 8²) = √(36 + 64) = √100 = 10'),
+  S('ב','אמצע קטע = ממוצע של ה-x וממוצע של ה-y:','x_M = [1 + 7/2] = 4 ,   y_M = [2 + 10/2] = 6','M(4;6)'),
+  S('ג','מחשבים את שתי הצלעות:','CA = √((12 − 1)² + (0 − 2)²)','= √(121 + 4) = √125','CB = √((12 − 7)² + (0 − 10)²)','= √(25 + 100) = √125'),
+  S('ג','שתי הצלעות שוות, ולכן המשולש שווה-שוקיים. לא צריך לחשב כמה זה שורש 125.','CA = CB = √125 ≈ 11.18'),
+  S('ד','שיפוע AB ושיפוע CM:','m_AB = [10 − 2/7 − 1] = [8/6] = [4/3]','m_CM = [6 − 0/4 − 12] = [6/−8] = −[3/4]'),
+  S('ד','מכפלת השיפועים:','[4/3] · (−[3/4]) = −1'),
+  S('ד','המכפלה מינוס 1, ולכן CM מאונך ל-AB. זה גם הגיוני: במשולש שווה-שוקיים, הקטע מהקודקוד לאמצע הבסיס מאונך לבסיס.'),
+ ],
+ final:[['א.','AB = 10'],['ב.','M(4;6)'],['ג.','CA = CB = √125 ≈ 11.18'],['ד.','m_AB = [4/3] ≈ 1.33'],['','m_CM = −[3/4] = −0.75'],['','[4/3] · (−[3/4]) = −1']],
+ errs:[E('אמצע קטע – מחברים, לא מחסרים.','[7 − 1/2]','[1 + 7/2]'),
+       E('ריבוע של מספר שלילי יוצא חיובי.','(0 − 10)² = −100','(0 − 10)² = 100'),
+       E('קודם מחברים מתחת לשורש, ורק אחר כך שורש.','√(36 + 64) = 6 + 8 = 14','√(36 + 64) = √100 = 10'),
+       E('מאונך: הפוך וגם בסימן הפוך – כך שהמכפלה מינוס 1.','[4/3] ו- −[4/3]','[4/3] ו- −[3/4]')]},
+
+{n:11, img:'q11', title:'משולש ישר-זווית לפי שיפועים',
+ text:'נתונות הנקודות A(−2;1), B(2;3), C(4;−1). א. חשבו את שיפועי הקטעים AB ו-BC, והסבירו מדוע המשולש ABC הוא ישר-זווית. באיזה קודקוד נמצאת הזווית הישרה? ב. חשבו את אורכי הניצבים AB ו-BC, ואת שטח המשולש.',
+ hint:['אם מכפלת השיפועים היא מינוס 1, הצלעות מאונכות. הזווית הישרה נמצאת בקודקוד ששתי הצלעות חולקות.'],
+ steps:[
+  S('א','שיפועים:','m_AB = [3 − 1/2 − (−2)] = [2/4] = [1/2]','m_BC = [−1 − 3/4 − 2] = [−4/2] = −2'),
+  S('א','מכפלת השיפועים:','[1/2] · (−2) = −1'),
+  S('א','המכפלה מינוס 1, ולכן AB מאונך ל-BC. האות המשותפת לשתי הצלעות היא B – שם הזווית הישרה.','AB ⊥ BC   →   ∠B = 90°'),
+  S('ב','אורכי הניצבים:','AB = √((2 − (−2))² + (3 − 1)²)','= √(16 + 4) = √20','BC = √((4 − 2)² + (−1 − 3)²)','= √(4 + 16) = √20'),
+  S('ב','שטח משולש ישר-זווית = ניצב כפול ניצב, חלקי 2. שורש 20 כפול שורש 20 זה 20.','S = [√20 · √20/2] = [20/2] = 10'),
+ ],
+ final:[['א.','m_AB = [1/2] = 0.5 ,  m_BC = −2'],['','!הזווית הישרה בקודקוד B'],['ב.','AB = BC = √20 ≈ 4.47'],['','S = 10']],
+ errs:[E('מינוס מינוס זה פלוס.','2 − (−2) = 0','2 − (−2) = 4'),
+       E('שורש כפול אותו שורש – המספר עצמו.','√20 · √20 = 400','√20 · √20 = 20'),
+       E('בשטח של משולש ישר-זווית משתמשים בשני הניצבים, לא ביתר AC.')]},
+
+// ================================================== parabola
+{n:12, img:'q12', title:'פרבולה – כל החקירה',
+ text:'בציור משורטט גרף הפונקציה y = x² − 8x + 12. א. מצאו את שיעורי נקודת המינימום של הפונקציה. ב. מהם תחומי העלייה והירידה של הפונקציה? ג. מהו הערך המינימלי של הפונקציה? ד. מצאו את נקודות האפס של הפונקציה. ה. רשמו את התחום שבו הפונקציה חיובית. ו. רשמו את התחום שבו הפונקציה שלילית. ז. בכמה נקודות חותך הישר y = −2 את גרף הפונקציה? ענו על פי השרטוט, ללא חישובים.',
+ hint:['כדאי להתחיל מסעיף ד (נקודות האפס): הקודקוד נמצא בדיוק באמצע ביניהן.'],
+ steps:[
+  S('ד','כדאי להתחיל מכאן. נקודות האפס – משווים ל-0:','x² − 8x + 12 = 0','b² − 4ac = 64 − 48 = 16','x = [8 ± 4/2]','x₁ = 6 ,  x₂ = 2','(2;0) ,  (6;0)'),
+  S('א','הקודקוד נמצא באמצע בין נקודות האפס:','x = [2 + 6/2] = 4'),
+  S('א','מציבים 4 כדי למצוא את y:','y = 4² − 8·4 + 12 = 16 − 32 + 12 = −4','(4;−4)'),
+  S('ב','המקדם של x בריבוע חיובי, ולכן הפרבולה פתוחה למעלה: משמאל לקודקוד יורדת, מימין עולה.',arrowTable(4,'↘','↗'),'ירידה:|x < 4','עלייה:|x > 4'),
+  S('ג','הערך המינימלי = ה-y של נקודת המינימום (רק מספר, לא נקודה):','−4'),
+  S('ה','טבלת סימנים: מציבים מספר אחד מכל תחום.',signTable(['2','6'],['0:12','4:−4','7:5'],['+','-','+']),'חיובית:|x < 2 או x > 6'),
+  S('ו','מאותה טבלה:','שלילית:|2 < x < 6'),
+  S('ז','הישר הוא קו אופקי בגובה מינוס 2. הנקודה הכי נמוכה של הפרבולה בגובה מינוס 4 – כלומר הישר עובר מעל הקודקוד, וחותך את שני ה"ענפים".','!בשתי נקודות'),
+ ],
+ final:[['א.','(4;−4)'],['ב.','עלייה:|x > 4'],['','ירידה:|x < 4'],['ג.','−4'],['ד.','(2;0) ,  (6;0)'],['ה.','x < 2 או x > 6'],['ו.','2 < x < 6'],['ז.','!בשתי נקודות']],
+ errs:[E('"ערך" של פונקציה הוא רק ה-y.','(4;−4)','−4'),
+       E('מינוס 8 כפול 4 – שלילי.','−8·4 = 32','−8·4 = −32'),
+       E('בין 2 ל-6 הגרף מתחת לציר x – זה התחום של שלילית, לא חיובית.'),
+       E('עלייה וירידה הם תמיד תחומים של x, לא של y.','y > −4','x > 4')]},
+
+{n:13, img:'q13', title:'פרבולה בצורה מפורקת',
+ text:'נתונה הפונקציה f(x) = (x + 4)(x − 2). א. מצאו את נקודות החיתוך של גרף הפונקציה עם הצירים. ב. מצאו את נקודת הקיצון של הפונקציה וקבעו את סוג הקיצון. ג. שרטטו סקיצה של גרף הפונקציה. ד. עבור אילו ערכי x הפונקציה יורדת וחיובית? ה. עבור אילו ערכי x הפונקציה עולה ושלילית?',
+ hint:['מכפלה שווה 0 כשאחד הגורמים שווה 0. את סעיפים ד ו-ה פותרים עם הסקיצה – צריך את שני התנאים יחד.'],
+ steps:[
+  S('א','חיתוך עם ציר x: מכפלה שווה 0 כשאחד הגורמים שווה 0.','(x + 4)(x − 2) = 0','x + 4 = 0   →   x = −4','x − 2 = 0   →   x = 2','(−4;0) ,  (2;0)'),
+  S('א','חיתוך עם ציר y: מציבים 0 במקום x.','f(0) = (0 + 4)(0 − 2) = 4·(−2) = −8','(0;−8)'),
+  S('ב','הקודקוד באמצע בין נקודות האפס:','x = [−4 + 2/2] = −1','f(−1) = (−1 + 4)(−1 − 2) = 3·(−3) = −9','(−1;−9)'),
+  S('ב','אם פותחים סוגריים, המקדם של x בריבוע הוא 1 – חיובי. הפרבולה פתוחה למעלה, ולכן הקודקוד הוא מינימום.','f(x) = x² + 2x − 8','!מינימום'),
+  S('ג','מסמנים את ארבע הנקודות ומעבירים דרכן פרבולה פתוחה למעלה:',sketch(x=>(x+4)*(x-2),-6.2,4.2,-10.5,9,[[-4,0,'−4',-14,-8],[2,0,'2',4,-8],[0,-8,'−8',6,4],[-1,-9,'(−1;−9)',-58,14]])),
+  S('ד','צריך את שני התנאים יחד – רק איפה ששניהם קורים:','יורדת:|x < −1','חיובית:|x < −4 או x > 2','שניהם:|x < −4'),
+  S('ה','אותו דבר:','עולה:|x > −1','שלילית:|−4 < x < 2','שניהם:|−1 < x < 2'),
+ ],
+ final:[['א.','(−4;0) ,  (2;0) ,  (0;−8)'],['ב.','(−1;−9)'],['','!מינימום'],['ד.','x < −4'],['ה.','−1 < x < 2']],
+ errs:[E('מעבירים אגף – מחליפים סימן.','x + 4 = 0  →  x = 4','x + 4 = 0  →  x = −4'),
+       E('ביקשו "יורדת וחיובית" – לא מספיק לענות רק "יורדת".','x < −1','x < −4'),
+       E('שוכחים את החיתוך עם ציר y. מציבים 0 במקום x.',null,'(0;−8)')]},
+
+{n:14, img:'q14', title:'התאמת פונקציות לגרפים',
+ text:'נתונות משוואות של ארבע פונקציות: f(x) = −x² + x + 6, g(x) = x² + x − 6, h(x) = x² − x − 6, k(x) = −x² − x + 6. בציור ארבעה גרפים (1)–(4): בשניים הפרבולה פתוחה למעלה ובשניים למטה. התאימו לכל פונקציה את הגרף המתאים לה על פי מציאת נקודות האפס, ובהתאם למקדם של x².',
+ hint:['שתי שאלות לכל פונקציה: (1) המקדם של x בריבוע חיובי או שלילי? (2) הקודקוד – באמצע בין נקודות האפס – מימין או משמאל לציר y?'],
+ steps:[
+  S('','מיון לפי המקדם של x בריבוע: פלוס – פתוחה למעלה (גרפים 1 ו-2). מינוס – פתוחה למטה (גרפים 3 ו-4).','פתוחה למעלה:|g ,  h','פתוחה למטה:|f ,  k'),
+  S('','g: נקודות האפס, והקודקוד באמצע ביניהן:','x² + x − 6 = 0   →   x = 2 ,  x = −3','x = [2 + (−3)/2] = −0.5','!הקודקוד משמאל לציר y – גרף (1)'),
+  S('','h:','x² − x − 6 = 0   →   x = 3 ,  x = −2','x = [3 + (−2)/2] = 0.5','!הקודקוד מימין לציר y – גרף (2)'),
+  S('','f: קודם כופלים את כל המשוואה במינוס 1 – כל האיברים מחליפים סימן.','−x² + x + 6 = 0','x² − x − 6 = 0   →   x = 3 ,  x = −2','x = 0.5','!מימין לציר y – גרף (4)'),
+  S('','k: אותו דבר.','−x² − x + 6 = 0','x² + x − 6 = 0   →   x = 2 ,  x = −3','x = −0.5','!משמאל לציר y – גרף (3)'),
+ ],
+ final:[['','f – (4)'],['','g – (1)'],['','h – (2)'],['','k – (3)']],
+ errs:[E('כופלים במינוס 1 – מחליפים סימן לכל האיברים, לא רק לראשון.','x² + x + 6 = 0','x² − x − 6 = 0'),
+       E('המספר החופשי (6 או מינוס 6) מבדיל רק בין "למעלה" ל"למטה", לא בין (1) ל-(2).'),
+       E('לא בטוחים מהציור? בדקו איזו נקודת אפס רחוקה יותר מציר y. ב-g, מינוס 3 רחוק יותר מ-2 – ולכן רוב הפרבולה משמאל.')]},
+
+// ================================================== pre-analysis
+{n:15, img:'q15', title:'חיוביות ושליליות מתוך גרף',
+ text:'לפניכם שש סקיצות של גרפים ובהם מסומנות נקודות החיתוך עם ציר x. (1) נקודת אפס ב-2, הגרף יורד. (2) אפסים ב-3 וב-6, הגרף למטה ביניהם. (3) הגרף נוגע בציר x ב-−3 ונשאר מעליו. (4) אפסים ב-0, 4, 8: עולה מ-0, למעלה עד 4, למטה עד 8, ואז למעלה. (5) אפסים ב-−2, 0, 2: משמאל למעלה, בין −2 ל-0 למטה, בין 0 ל-2 למעלה, אחרי 2 למטה. (6) אפסים ב-−3, −1, 3, 5: למטה, למעלה, למטה, למעלה, למטה. רשמו את תחומי החיוביות והשליליות של כל אחת מהפונקציות.',
+ hint:['חיובית = הגרף מעל ציר x. שלילית = הגרף מתחת לציר x. עוברים משמאל לימין, ובכל נקודת אפס בודקים: הגרף עבר צד?'],
+ steps:[
+  S('','השיטה: מתחילים משמאל והולכים ימינה. בכל קטע בין שתי נקודות אפס שואלים: הגרף מעל הציר (חיובית) או מתחתיו (שלילית)? נקודות האפס עצמן – לא חיוביות ולא שליליות.'),
+  S('(1)','משמאל ל-2 הגרף מעל הציר, ומימין ל-2 מתחתיו.','חיובית:|x < 2','שלילית:|x > 2'),
+  S('(2)','משמאל ל-3 מעל, בין 3 ל-6 מתחת, ומימין ל-6 שוב מעל.','חיובית:|x < 3 או x > 6','שלילית:|3 < x < 6'),
+  S('(3)','הגרף רק נוגע בציר במינוס 3 וחוזר למעלה. הוא מעל הציר בכל מקום, חוץ מהנקודה הזאת.','חיובית:|x < −3 או x > −3','!שלילית: אין'),
+  S('(4)','משמאל ל-0 מתחת, בין 0 ל-4 מעל, בין 4 ל-8 מתחת, ואחרי 8 מעל.','חיובית:|0 < x < 4 או x > 8','שלילית:|x < 0 או 4 < x < 8'),
+  S('(5)','משמאל למינוס 2 מעל, ממינוס 2 עד 0 מתחת, מ-0 עד 2 מעל, ואחרי 2 מתחת.','חיובית:|x < −2 או 0 < x < 2','שלילית:|−2 < x < 0 או x > 2'),
+  S('(6)','משמאל למינוס 3 מתחת, ממינוס 3 עד מינוס 1 מעל, ממינוס 1 עד 3 מתחת, מ-3 עד 5 מעל, ואחרי 5 מתחת.','חיובית:|−3 < x < −1 או 3 < x < 5','שלילית:|x < −3 או −1 < x < 3','|או x > 5'),
+ ],
+ final:[['(1)','חיובית:|x < 2'],['','שלילית:|x > 2'],['(2)','חיובית:|x < 3 או x > 6'],['','שלילית:|3 < x < 6'],['(3)','חיובית:|x ≠ −3'],['','!שלילית: אין'],['(4)','חיובית:|0 < x < 4 או x > 8'],['','שלילית:|x < 0 או 4 < x < 8'],['(5)','חיובית:|x < −2 או 0 < x < 2'],['','שלילית:|−2 < x < 0 או x > 2'],['(6)','חיובית:|−3 < x < −1 או 3 < x < 5'],['','שלילית:|x < −3 או −1 < x < 3 או x > 5']],
+ errs:[E('"חיובית" זה לא "עולה". חיובית = מעל הציר, גם כשהגרף יורד שם – כמו בגרף (1) משמאל ל-2.'),
+       E('בגרף (3) הגרף רק נוגע בציר – הוא לא עובר מתחתיו, ולכן אין תחום שליליות.'),
+       E('נקודות האפס לא בתוך התחום: שם הפונקציה שווה 0.','x ≤ 2','x < 2'),
+       E('שוכחים את הקטעים שבקצוות – מימין לנקודה האחרונה ומשמאל לראשונה.')]},
+
+{n:16, img:'q16', title:'קיצון, עלייה וירידה מתוך גרף',
+ text:'בכל אחד מהסעיפים מתואר גרף של פונקציה ועליו מסומנים שיעורי ה-x של נקודות הקיצון. א. פרבולה ∪ עם קיצון ב-x=3. ב. פרבולה ∩ עם קיצון ב-x=2. ג. גרף עם קיצון ב-x=1 (פסגה) וב-x=4 (עמק). (1) קבעו עבור כל נקודת קיצון אם היא מינימום או מקסימום. (2) רשמו את תחומי העלייה והירידה של הפונקציה.',
+ hint:['מסתכלים על הגרף משמאל לימין, כמו מטפסים על הר: עולים או יורדים? פסגה = מקסימום, עמק = מינימום.'],
+ steps:[
+  S('א','ב-3 יש "עמק" – הנקודה הכי נמוכה. משמאל לה הגרף יורד, ומימין עולה.',arrowTable(3,'↘','↗'),'!מינימום','ירידה:|x < 3','עלייה:|x > 3'),
+  S('ב','ב-2 יש "פסגה". משמאל לה הגרף עולה, ומימין יורד.',arrowTable(2,'↗','↘'),'!מקסימום','עלייה:|x < 2','ירידה:|x > 2'),
+  S('ג','ב-1 פסגה, ב-4 עמק. משמאל ל-1 עולה, בין 1 ל-4 יורדת, ואחרי 4 שוב עולה.','!מקסימום ב-1, מינימום ב-4','עלייה:|x < 1 או x > 4','ירידה:|1 < x < 4'),
+ ],
+ final:[['א.','!מינימום'],['','עלייה:|x > 3'],['','ירידה:|x < 3'],['ב.','!מקסימום'],['','עלייה:|x < 2'],['','ירידה:|x > 2'],['ג.','!מקסימום ב-1, מינימום ב-4'],['','עלייה:|x < 1 או x > 4'],['','ירידה:|1 < x < 4']],
+ errs:[E('קוראים את הגרף מימין לשמאל. תמיד משמאל לימין – בכיוון שבו x גדל.'),
+       E('עלייה וירידה הם תחומים של x, לא של y.'),
+       E('בסעיף ג: מקסימום (מקומי) הוא פסגה, גם אם בהמשך הגרף עולה גבוה יותר ממנה.')]},
+
+// ================================================== cubic
+{n:17, img:'q17', title:'משוואות ממעלה שלישית ומעלה',
+ text:'פתרו את המשוואות: א. x³ = 64. ב. x³ = −8. ג. x³ = 50 (בעזרת מחשבון). ד. x³ − 16x = 0. ה. x³ + 5x² = 0. ו. x⁴ − 26x² + 25 = 0.',
+ hint:['שלושה סוגים: (1) "x בשלישית = מספר" – שורש שלישי. (2) אפשר להוציא x או x בריבוע כגורם משותף. (3) יש רק x בחזקת 4 ו-x בריבוע – מציבים t במקום x בריבוע.'],
+ steps:[
+  S('א','איזה מספר, כפול עצמו 3 פעמים, נותן 64?','4 · 4 · 4 = 64','x = ∛64 = 4'),
+  S('ב','לשורש שלישי מותר מספר שלילי: מינוס כפול מינוס כפול מינוס זה מינוס.','(−2)·(−2)·(−2) = −8','x = −2'),
+  S('ג','במחשבון:','x = ∛50 ≈ 3.68'),
+  S('ד','מוציאים x כגורם משותף:','x³ − 16x = 0','x(x² − 16) = 0'),
+  S('ד','מכפלה שווה 0 כשאחד הגורמים שווה 0:','x = 0','x² = 16   →   x = 4 ,  x = −4'),
+  S('ה','מוציאים x בריבוע כגורם משותף:','x³ + 5x² = 0','x²(x + 5) = 0','x² = 0   →   x = 0','x + 5 = 0   →   x = −5'),
+  S('ו','יש רק x בחזקת 4 ו-x בריבוע. מציבים t במקום x בריבוע:','t = x² ,   x⁴ = t²','t² − 26t + 25 = 0'),
+  S('ו','נוסחת השורשים:','b² − 4ac = 676 − 100 = 576 ,  √576 = 24','t = [26 ± 24/2]','t₁ = 25 ,  t₂ = 1'),
+  S('ו','זו עוד לא התשובה! חוזרים ל-x:','x² = 25   →   x = 5 ,  x = −5','x² = 1   →   x = 1 ,  x = −1'),
+ ],
+ final:[['א.','x = 4'],['ב.','x = −2'],['ג.','x ≈ 3.68'],['ד.','x = 0 ,  x = 4 ,  x = −4'],['ה.','x = 0 ,  x = −5'],['ו.','x = ±1 ,  x = ±5']],
+ errs:[E('שורש של מספר שלילי אסור רק בשורש ריבועי. שורש שלישי – מותר.','x³ = −8  →  אין פתרון','x = −2'),
+       E('מחלקים ב-x ומאבדים את הפתרון 0. לא מחלקים – מוציאים גורם משותף.','x² − 16 = 0','x(x² − 16) = 0'),
+       E('לריבוע יש שני פתרונות.','x² = 16  →  x = 4','x² = 16  →  x = ±4'),
+       E('בסעיף ו עוצרים ב-t. צריך לחזור ל-x.','t = 1 ,  t = 25','x = ±1 ,  x = ±5'),
+       E('שורש שלישי זה לא חילוק ב-3.','[64/3]','∛64 = 4')]},
+
+{n:18, img:'q18', title:'חיוביות ושליליות בטבלת סימנים',
+ text:'מצאו את תחומי החיוביות והשליליות של הפונקציות הבאות (מצאו את נקודות האפס ובנו טבלת סימנים): א. y = x³ − 16x. ב. y = x⁴ − 26x² + 25. ג. (אתגר) y = x³ − 4x².',
+ hint:['את נקודות האפס של א ו-ב כבר מצאתם בשאלה 17. שמים אותן בטבלה מהקטן לגדול, ומציבים מספר אחד מכל תחום.'],
+ steps:[
+  S('א','נקודות האפס (משאלה 17, סעיף ד):','x = −4 ,  x = 0 ,  x = 4'),
+  S('א','טבלת סימנים: מציבים מספר אחד מכל תחום.',signTable(['−4','0','4'],['−5:−45','−1:15','1:−15','5:45'],['-','+','-','+'])),
+  S('א','קוראים מהטבלה:','חיובית:|−4 < x < 0 או x > 4','שלילית:|x < −4 או 0 < x < 4'),
+  S('ב','נקודות האפס (משאלה 17, סעיף ו):','x = −5 ,  x = −1 ,  x = 1 ,  x = 5'),
+  S('ב','טבלת סימנים:',signTable(['−5','−1','1','5'],['−6:385','−2:−63','0:25','2:−63','6:385'],['+','-','+','-','+'])),
+  S('ב','קוראים מהטבלה:','חיובית:|x < −5 או −1 < x < 1 או x > 5','שלילית:|−5 < x < −1 או 1 < x < 5'),
+  S('ג','נקודות האפס: מוציאים x בריבוע כגורם משותף.','x³ − 4x² = 0','x²(x − 4) = 0','x = 0 ,  x = 4'),
+  S('ג','טבלת סימנים. שימו לב: ב-0 הסימן לא מתחלף (הגרף רק נוגע בציר). לכן חייבים להציב בכל תחום, ולא לנחש.',signTable(['0','4'],['−1:−5','1:−3','5:25'],['-','-','+'])),
+  S('ג','קוראים מהטבלה:','חיובית:|x > 4','שלילית:|x < 0 או 0 < x < 4'),
+ ],
+ final:[['א.','חיובית:|−4 < x < 0 או x > 4'],['','שלילית:|x < −4 או 0 < x < 4'],['ב.','חיובית:|x < −5 או −1 < x < 1 או x > 5'],['','שלילית:|−5 < x < −1 או 1 < x < 5'],['ג.','חיובית:|x > 4'],['','שלילית:|x < 0 או 0 < x < 4']],
+ errs:[E('מציבים את נקודת האפס עצמה ומקבלים 0. מציבים מספר בתוך התחום, בין נקודות האפס.'),
+       E('חזקה אי-זוגית של מספר שלילי יוצאת שלילית.','(−5)³ = 125','(−5)³ = −125'),
+       E('בטבלה – נקודות האפס מהקטן לגדול.','0 ,  −4 ,  4','−4 ,  0 ,  4'),
+       E('בסעיף ג מניחים שהסימן מתחלף בכל נקודת אפס. ב-0 הוא לא מתחלף – רואים את זה רק כשמציבים.')]},
+];
+
+// ================================================== AI prompt
+function aiPrompt(q){
+  return `אתה מורה פרטי סבלני למתמטיקה. אני תלמיד/ה בכיתה י', 4 יחידות, ואני רוצה ללמוד לפתור את השאלה הזאת לבד.
+
+הכללים:
+1. אל תכתוב לי את הפתרון ואל תגלה את התשובה הסופית, גם אם אבקש.
+2. עבוד איתי צעד אחד בכל פעם: שאל אותי שאלה מנחה אחת, וחכה לתשובה שלי לפני שממשיכים.
+3. אם טעיתי, אל תתקן במקומי. תגיד לי באיזו שורה לבדוק (למשל סימן מינוס, פתיחת סוגריים, העברת אגף), ותן לי לנסות שוב.
+4. אם אני תקוע/ה פעמיים באותו מקום, תן רמז קטן או דוגמה דומה עם מספרים אחרים.
+5. השתמש רק בשיטות של כיתה י': נוסחת השורשים, טבלת סימנים, נוסחת מרחק, שיפוע, אמצע קטע.
+6. כתוב בעברית פשוטה, במשפטים קצרים.
+7. כשאגיע לתשובה, בקש ממני לבדוק אותה בעצמי (למשל בהצבה), ולהסביר במילים שלי מה עשיתי.
+
+השאלה (שאלה ${q.n} מעבודת הבית):
+${q.text}
+
+נתחיל: שאל אותי מה הצעד הראשון שאני חושב/ת לעשות.`;
+}
+
+// ================================================== render helpers
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function math(s){
+  let h = esc(s);
+  h = h.replace(/\[([^\[\]\/]+)\/([^\[\]]+)\]/g, '<span class="fr"><span>$1</span><span>$2</span></span>');
+  h = h.replace(/\{([^{}]+)\}/g, '<span class="hl">$1</span>');
+  h = h.replace(/_([A-Z]{1,2})/g, '<sub>$1</sub>');
+  h = h.replace(/ או /g, ' <span class="or">או</span> ');
+  h = h.replace(/✓/g, '<span class="ok">✓</span>');
+  return h;
+}
+function eqLine(e){
+  if (typeof e === 'object') return e.html;
+  if (e.startsWith('!')) return `<div class="eq heb">${esc(e.slice(1))}</div>`;
+  if (e.includes('|')){ const [l,m]=e.split('|'); return `<div class="eq lab">${l?`<b>${esc(l)}</b>`:''}<span class="m">${math(m)}</span></div>`; }
+  return `<div class="eq"><span class="m">${math(e)}</span></div>`;
+}
+function finLine([l,e]){
+  let body;
+  if (e.startsWith('!')) body = `<div class="eq heb" style="text-align:right">${esc(e.slice(1))}</div>`;
+  else if (e.includes('|')){ const [a,b]=e.split('|'); body = `<div class="eq lab" style="justify-content:flex-start"><b>${esc(a)}</b><span class="m">${math(b)}</span></div>`; }
+  else body = `<div class="eq" style="text-align:right"><span class="m">${math(e)}</span></div>`;
+  return `<div class="fl">${esc(l)}</div>${body}`;
+}
+
+// ================================================== build
+const stage = document.getElementById('stage'), jump = document.getElementById('jump');
+const cards = [], chips = [];
+SECTIONS.forEach((sec, si) => {
+  if (si) { const s=document.createElement('span'); s.className='sep'; jump.appendChild(s); }
+  Q.filter(q => q.n >= sec.from && q.n <= sec.to).forEach(q => {
+    q.sec = sec;
+    const chip = document.createElement('button'); chip.textContent = q.n; chip.setAttribute('aria-label','שאלה '+q.n);
+    chip.onclick = () => go(q.n - 1); jump.appendChild(chip); chips.push(chip);
+
+    const c = document.createElement('article'); c.className = 'card'; c.id = 'q'+q.n;
+    let steps = `<div class="step hint-step" data-k="0"><div class="say"><span class="sn">רמז:</span>${esc(q.hint[0])}</div>${q.hint.slice(1).map(eqLine).join('')}<div class="small-note">נסו להמשיך לבד. לא מצליחים? לחצו "לפתרון".</div></div>`, lastPart = null, k = 0;
+    q.steps.forEach(st => {
+      if (st.p && st.p !== lastPart){ steps += `<div class="part" data-k="${k+1}">${st.p.startsWith('(')?'גרף '+st.p:'סעיף '+st.p}</div>`; lastPart = st.p; }
+      steps += `<div class="step" data-k="${k+1}"><div class="say"><span class="sn">${k+1}.</span>${esc(st.say)}</div>${st.eq.map(eqLine).join('')}</div>`;
+      k++;
+    });
+    const pr = aiPrompt(q);
+    const errs = q.errs.map(e => `<div class="err-item"><div>${esc(e.t)}</div>`+
+        (e.w?`<div class="eq w"><span class="mk">לא נכון:</span><span class="m">${math(e.w)}</span></div>`:'')+
+        (e.r?`<div class="eq r"><span class="mk">נכון:</span><span class="m">${math(e.r)}</span></div>`:'')+`</div>`).join('');
+    c.innerHTML = `
+      <div class="head"><div class="num">${q.n}</div><div class="ttl">${q.title}</div></div>
+      <div class="imgbox${q.small?' small':''}" role="button" aria-label="הגדלת השאלה">
+        <img class="qimg" src="img/${q.img}.png" alt="שאלה ${q.n}: ${esc(q.text).replace(/"/g,'&quot;')}">
+        <span class="zoom-ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M10.5 7.5v6M7.5 10.5h6"/></svg></span>
+      </div>
+      ${q.instr?`<div class="instr">${q.instr}</div>`:''}
+      <div class="final-box"><h4>תשובה סופית:</h4><div class="fin">${q.final.map(finLine).join('')}</div></div>
+      <div class="btns">
+        <button class="tg t-steps" data-p="steps" aria-pressed="false">פתרון מפורט</button>
+        <button class="tg t-err" data-p="err" aria-pressed="false">טעויות נפוצות</button>
+        <button class="tg t-ai" data-p="ai" aria-pressed="false">עזרה מ-AI</button>
+      </div>
+      <div class="panel p-steps" data-panel="steps">
+        ${steps}
+        <div class="step-ctl"><button class="b-next">לפתרון</button><button class="b-all">הכול</button></div>
+        <div class="done-msg">זהו! עכשיו נסו לפתור שוב לבד במחברת, בלי להסתכל.</div>
+      </div>
+      <div class="panel p-err" data-panel="err"><h4>טעויות נפוצות – אולי אחת מהן אצלכם?</h4>${errs}</div>
+      <div class="panel p-ai" data-panel="ai"><p class="ai-note">הכפתורים שולחים לצ'אט את השאלה עם הוראה <b>להנחות אתכם בשאלות, בלי לפתור במקומכם</b>. ב-Gemini מדביקים (ההוראה מועתקת אוטומטית).</p>
+        <div class="ai-btns">
+          <button class="b-copy">העתקה בלבד</button>
+          <a href="https://chatgpt.com/?q=${encodeURIComponent(pr)}" target="_blank" rel="noopener">ChatGPT</a>
+          <a href="https://claude.ai/new?q=${encodeURIComponent(pr)}" target="_blank" rel="noopener">Claude</a>
+          <a class="b-gem" href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini</a>
+        </div>
+      </div>`;
+    stage.appendChild(c); cards.push(c);
+
+    const stepsEls = [...c.querySelectorAll('.step')], parts = [...c.querySelectorAll('.part')];
+    let shown = 0;
+    const showUpTo = n => {
+      shown = Math.min(n, stepsEls.length);
+      stepsEls.forEach((s,i) => s.classList.toggle('show', i < shown));
+      parts.forEach(p => p.classList.toggle('show', +p.dataset.k < shown));
+      const done = shown >= stepsEls.length;
+      c.querySelector('.step-ctl').style.display = done ? 'none' : '';
+      c.querySelector('.done-msg').style.display = done ? 'block' : 'none';
+      c.querySelector('.b-next').textContent = shown <= 1 ? 'לפתרון – שלב 1' : 'השלב הבא';
+    };
+    c.querySelectorAll('.tg').forEach(b => b.onclick = () => {
+      const p = c.querySelector(`[data-panel="${b.dataset.p}"]`);
+      const on = !p.classList.contains('open');
+      p.classList.toggle('open', on); b.setAttribute('aria-pressed', on);
+      if (b.dataset.p === 'steps' && on && shown === 0) showUpTo(1);
+      if (on) p.scrollIntoView({block:'nearest', behavior:'smooth'});
+    });
+    c.querySelector('.b-next').onclick = () => { showUpTo(shown + 1); stepsEls[shown-1].scrollIntoView({block:'nearest', behavior:'smooth'}); };
+    c.querySelector('.b-all').onclick = () => showUpTo(stepsEls.length);
+    c.querySelector('.b-copy').onclick = () => copy(pr);
+    c.querySelector('.b-gem').addEventListener('click', () => copy(pr, 'ההוראה הועתקה – מדביקים ב-Gemini'));
+    c.querySelector('.imgbox').onclick = () => openLb(`img/${q.img}.png`);
+  });
+});
+
+// shrink long equation lines so they fit on one line
+function fit(root){
+  root.querySelectorAll('.eq').forEach(e => {
+    if (!e.offsetParent) return;
+    e.style.fontSize = '';
+    let fs = parseFloat(getComputedStyle(e).fontSize), min = fs * 0.62;
+    while (e.scrollWidth > e.clientWidth + 1 && fs > min){ fs -= 1; e.style.fontSize = fs + 'px'; }
+  });
+}
+new MutationObserver(ms => ms.forEach(m => m.target.closest && m.target.closest('.card') && fit(m.target)))
+  .observe(stage, {attributes:true, subtree:true, attributeFilter:['class']});
+addEventListener('resize', () => cards[cur] && fit(cards[cur]));
+
+// ================================================== carousel
+let cur = -1;
+function go(i, dir){
+  i = Math.max(0, Math.min(Q.length - 1, i));
+  if (i === cur) return;
+  if (dir === undefined) dir = i > cur ? 1 : -1;
+  if (cur >= 0) cards[cur].classList.remove('on','in-next','in-prev');
+  const c = cards[i]; c.classList.remove('in-next','in-prev'); void c.offsetWidth;
+  c.classList.add('on', cur < 0 ? 'x' : (dir > 0 ? 'in-next' : 'in-prev'));
+  chips.forEach((ch,k) => ch.classList.toggle('cur', k === i));
+  chips[i].scrollIntoView({inline:'center', block:'nearest', behavior: cur<0?'auto':'smooth'});
+  cur = i;
+  const q = Q[i];
+  document.getElementById('secName').textContent = q.sec.name;
+  document.getElementById('secCount').textContent = '';
+  document.getElementById('cnt').textContent = `${i+1} / ${Q.length}`;
+  document.getElementById('prev').disabled = i === 0;
+  document.getElementById('next').disabled = i === Q.length - 1;
+  history.replaceState(null, '', '#q' + q.n);
+  const top = document.querySelector('.where').getBoundingClientRect().top + scrollY - 60;
+  if (scrollY > top) scrollTo({top, behavior:'auto'});
+}
+document.getElementById('prev').onclick = () => go(cur - 1, -1);
+document.getElementById('next').onclick = () => go(cur + 1, 1);
+const m0 = location.hash.match(/^#q(\d+)$/);
+go(m0 ? +m0[1] - 1 : 0);
+
+// swipe (RTL: finger to the right = next)
+let sx = null, sy = null;
+stage.addEventListener('touchstart', e => {
+  if (e.touches.length !== 1 || e.target.closest('.tbl-wrap')) { sx = null; return; }
+  sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+}, {passive:true});
+stage.addEventListener('touchend', e => {
+  if (sx === null) return;
+  const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+  sx = null;
+  if (Math.abs(dx) > 60 && Math.abs(dx) > 1.5 * Math.abs(dy)) go(cur + (dx > 0 ? 1 : -1), dx > 0 ? 1 : -1);
+}, {passive:true});
+document.addEventListener('keydown', e => {
+  if (lb.classList.contains('on')) { if (e.key === 'Escape') closeLb(); return; }
+  if (e.key === 'ArrowLeft') go(cur + 1, 1);
+  if (e.key === 'ArrowRight') go(cur - 1, -1);
+});
+
+// ================================================== lightbox
+const lb = document.getElementById('lb'), lbimg = document.getElementById('lbimg');
+function openLb(src){ lbimg.src = src; lb.classList.remove('big'); lb.classList.add('on'); document.body.style.overflow='hidden'; lb.scrollTo(0,0); }
+function closeLb(){ lb.classList.remove('on'); document.body.style.overflow=''; }
+document.getElementById('lbx').onclick = closeLb;
+lb.addEventListener('click', e => { if (e.target === lb || e.target.classList.contains('inner')) closeLb(); });
+lbimg.onclick = () => lb.classList.toggle('big');
+
+// ================================================== copy
+function copy(t, msg){
+  const ok = () => { const el = document.getElementById('toast'); el.textContent = msg || "הועתק! עכשיו מדביקים בצ'אט"; el.classList.add('on'); setTimeout(()=>el.classList.remove('on'), 1800); };
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(t).then(ok, () => fallback(t, ok));
+  else fallback(t, ok);
+}
+function fallback(t, ok){
+  const ta = document.createElement('textarea'); ta.value = t; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); ok(); }catch(e){} ta.remove();
+}
+</script>
+</body>
+</html>
